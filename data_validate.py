@@ -7,7 +7,7 @@ DATA_KAFKA_TOPIC = 'active_data'
 
 
 def validate_data():
-    # Connect to Kafka and subscribe to topic
+    # Subscribe to kafka topic
     consumer = KafkaConsumer({
         'bootstrap.servers': 'localhost:9092'})
     consumer.subscribe([DATA_KAFKA_TOPIC])
