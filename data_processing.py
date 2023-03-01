@@ -37,13 +37,6 @@ def ext_src_tbls():
     
     producer.flush()
 
-    # Instantiate Kafka consumer to print one message from the topic
-    consumer = KafkaConsumer('active_data', bootstrap_servers='localhost:9092', auto_offset_reset='earliest', enable_auto_commit=True)
-    message = next(consumer)
-    print(message.value.decode())
-
-
-
     # Close connections
     producer.close()
     cursor.close()
