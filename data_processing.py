@@ -1,5 +1,5 @@
 import pyodbc
-from kafka import KafkaProducer, KafkaConsumer
+from kafka import KafkaProducer
 
 
 # Connection parameters
@@ -16,7 +16,7 @@ def ext_src_tbls():
                         SERVER={server};
                         ENCRYPT={Encrypt};
                         DATABASE={database};
-                        UID={username};kafka_bootstrap_servers
+                        UID={username};
                         PWD={password};
     """
     # Establish connection
