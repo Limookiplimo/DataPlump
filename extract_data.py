@@ -35,4 +35,3 @@ def extract_data():
     cursor.close()
     conn.close()
     return dead_letter_queue
-extract_data()
