@@ -2,7 +2,7 @@ import pyodbc
 from kafka import KafkaProducer
 
 # Define validation function
-def validate_data(row):
+def validate_extracted_data(row):
     if len(row) !=13:
         return False
     return True
@@ -24,9 +24,9 @@ def extract_data():
     producer = KafkaProducer(bootstrap_servers='localhost:9092')
     dead_letter_queue = []
     for row in rows:
-        if validate_data(row):
+        if validate_extracted_data(row):
             message = str(row).encode('utf-8')
-            producer.send('data_extracts', value = message)
+            producer.send('raw-data', value = message)
             producer.flush()
         else:
             dead_letter_queue.append(row)
@@ -35,3 +35,4 @@ def extract_data():
     cursor.close()
     conn.close()
     return dead_letter_queue
+extract_data()
