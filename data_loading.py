@@ -3,7 +3,7 @@ import psycopg2
 
 def load_data():
     try:
-        spark = SparkSession.builder.appName("loadpg").config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.2").getOrCreate()
+        spark = SparkSession.builder.appName("loading").config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.2").getOrCreate()
         df = spark.read.format("kafka") \
             .option("kafka.bootstrap.servers", "localhost:9092") \
             .option("subscribe", "clean-data") \
