@@ -55,7 +55,7 @@ def validation_alerts(invalid_data):
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login("limookiplimo@gmail.com", "kyuxxojorpvtdaxy")
+        server.login("limookiplimo@gmail.com", "kuxxojorpvtdaxy")
         subject = "Data Validation Error"
         message = f"The following rows did not pass validation: {len(invalid_data)} rows"
         msg = MIMEText(message)
