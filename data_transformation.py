@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import regexp_replace, col, to_date
+from pyspark.sql.functions import regexp_replace, col
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, IntegerType, DateType
 import smtplib
 from email.mime.text import MIMEText
@@ -26,7 +26,7 @@ def validate_transformed_data(df):
         StructField("Channel", StringType(), True)
     ])
     if df.schema != working_schema:
-        raise ValueError("Incorrect schema")
+        raise ValueError
     # DATA TYPES (string, integer, date, double)
     invalid_data = []
     for col_name, col_type in df.dtypes:
@@ -47,17 +47,16 @@ def validate_transformed_data(df):
                 invalid_data.append(col_name)
                 raise ValueError(f"Expected 'string' data type for column '{col_name}' but got '{col_type}'")
     if invalid_data:
-        validation_alerts(invalid_data)
-        raise ValueError(f"\n Validation unsuccessful \n {len(invalid_data)}")
-    print("Transformation Successful \n Validation Successful")
+        message = f"The following columns have invalid data types: {', '.join(invalid_data)}"
+        validation_alerts(message)
+        raise ValueError
 
-def validation_alerts(invalid_data):
+def validation_alerts(message):
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login("limookiplimo@gmail.com", "kuxxojorpvtdaxy")
+        server.login("limookiplimo@gmail.com", "token")
         subject = "Data Validation Error"
-        message = f"The following rows did not pass validation: {len(invalid_data)} rows"
         msg = MIMEText(message)
         msg['Subject'] = subject
         msg['From'] = "limookiplimo@gmail.com"
@@ -80,49 +79,29 @@ def transform_data():
         conn = (spark
             .read
             .format("kafka")
-            .option("kafka.bootstrap.servers", "localhost:9092") # kafka server
-            .option("subscribe", "raw-data") # topic
-            .option("startingOffsets", "earliest") # start from beginning 
+            .option("kafka.bootstrap.servers", "localhost:9092")
+            .option("subscribe", "raw-data")
+            .option("startingOffsets", "earliest")
             .load())
         # Convert data to DataFrame and split columns
         data = conn.selectExpr("CAST(value AS STRING)").rdd\
             .map(lambda x: x[0].split(", ")) \
-            .toDF(["Retailer", "Retailer ID", "Invoice Date", "Region", "State", "City", "Product", "Price per Unit", "Units Sold", "Total Sales", "Operating Profit","Operating Margin", "Sales Method"])
-        # Remove dollar-percent signs
+            .toDF(["Retailer","RetailerID","InvoiceDate","Region","State","City","Product","UnitPrice","Quantity","Sales","Profit","PercentMargin","Channel"])
+        # Format columns values
         data = (data\
-            .withColumn("Retailer ID", col("Retailer ID").cast("int"))
-            .withColumn("Invoice Date", to_date("Invoice Date", "MM/dd/yyyy"))
-            .withColumn("Price per Unit", regexp_replace("Price per Unit", "\\$", "").cast("double"))
-            .withColumn("Units Sold", col("Units Sold").cast("int"))
-            .withColumn("Total Sales", regexp_replace("Total Sales", "\\$", "").cast("double"))
-            .withColumn("Operating Profit", regexp_replace("Operating Profit", "\\$", "").cast("double"))
-            .withColumn("Operating Margin", regexp_replace("Operating Margin", "%", "").cast("double")))
-        #Rename columns
-        data = (data
-                .withColumnRenamed("Retailer ID", "RetailerID")
-                .withColumnRenamed("Invoice Date", "InvoiceDate")
-                .withColumnRenamed("Price per Unit", "UnitPrice")
-                .withColumnRenamed("Units Sold", "Quantity")
-                .withColumnRenamed("Total Sales", "Sales")
-                .withColumnRenamed("Operating Profit", "Profit")
-                .withColumnRenamed("Operating Margin", "Margin")
-                .withColumnRenamed("Sales Method", "Channel"))
-
+            .withColumn("InvoiceDate", regexp_replace(col("InvoiceDate"), "/", "-"))
+            .withColumn("UnitPrice", regexp_replace("UnitPrice", '\\$', ''))
+            .withColumn('Sales', regexp_replace('Sales', '\\$', ''))
+            .withColumn("Profit", regexp_replace(col("Profit"), '\\$', ''))
+            .withColumn("PercentMargin", regexp_replace(col("PercentMargin"), '\\%', '')))
         # Write transformed Kafka
         data \
-            .selectExpr("concat_ws(', ',Retailer,RetailerID,InvoiceDate,Region,State,City,Product,UnitPrice,Quantity,Sales,Profit,Margin,Channel) AS value")\
+            .selectExpr("concat_ws(', ',Retailer,RetailerID,InvoiceDate,Region,State,City,Product,UnitPrice,Quantity,Sales,Profit,PercentMargin,Channel) AS value")\
             .write \
             .format("kafka") \
             .option("kafka.bootstrap.servers", "localhost:9092") \
             .option("topic", "clean-data") \
             .save()
-        clean_data = spark\
-                            .read\
-                            .format("kafka")\
-                            .option("kafka.bootstrap.servers", "localhost:9092")\
-                            .option("subscribe", "clean-data")\
-                            .load()
-        
         validate_transformed_data(data)
     except Exception as e:
         print("\n Error casting into DF: \n",e)
