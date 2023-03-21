@@ -21,7 +21,7 @@ consumer = KafkaConsumer(
 for message in consumer:
     data = message.value.decode('utf-8')
     # assuming the data is in a CSV format
-    fields = data.split(',')
+    fields = data.split(",")
     cur = conn.cursor()
     cur.execute("""
             CREATE TABLE IF NOT EXISTS Sales (
@@ -40,7 +40,7 @@ for message in consumer:
                 Channel VARCHAR(255)
             );
         """)
-    cur.execute("INSERT INTO Sales( Retailer,RetailerID,InvoiceDate,Region,State,City,Product,UnitPrice,Quantity,Sales,Profit,PercentMargin,Channel) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+    cur.execute("INSERT INTO Sales(Retailer,RetailerID,InvoiceDate,Region,State,City,Product,UnitPrice,Quantity,Sales,Profit,PercentMargin,Channel) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
         (fields[0],fields[1],fields[2],fields[3],fields[4],fields[5],fields[6],fields[7],fields[8],fields[9],fields[10],fields[11],fields[12])
     )
     conn.commit()
