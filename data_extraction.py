@@ -11,9 +11,9 @@ def extract_data():
     conn_string = f"""DRIVER={'ODBC Driver 18 for SQL Server'};
                         SERVER={'tcp:localhost, 1433'};
                         ENCRYPT={'No'};
-                        DATABASE={'Adidas'};
+                        DATABASE={'DATABASE'};
                         UID={'SA'};
-                        PWD={'Admin@4321'};
+                        PWD={'PASSWORD'};
     """
     # Establish connection >> Exec query
     conn= pyodbc.connect(conn_string)
