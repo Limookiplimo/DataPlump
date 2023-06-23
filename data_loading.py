@@ -3,10 +3,10 @@ from kafka import KafkaConsumer
 
 # set up PostgreSQL connection
 conn = psycopg2.connect(
-    host="localhost",
-    database="mydb",
-    user="user",
-    password="Mypassword"
+    host="HOST",
+    database="DATABASE",
+    user="USERNAME",
+    password="PASSWORD"
 )
 
 # configure Kafka consumer
